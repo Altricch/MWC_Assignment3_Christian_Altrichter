@@ -102,6 +102,8 @@ public class StepAppOpenHelper extends SQLiteOpenHelper {
         SQLiteDatabase database = databaseHelper.getReadableDatabase();
 
         // 3. Define the query to get the data
+        // '?' indicates {date}
+        // at the beginning the cursor is set to the end of the table
         Cursor cursor = database.rawQuery("SELECT hour, COUNT(*)  FROM num_steps " +
                 "WHERE day = ? GROUP BY hour ORDER BY  hour ASC ", new String [] {date});
 
@@ -113,7 +115,6 @@ public class StepAppOpenHelper extends SQLiteOpenHelper {
 
             //2. Put the data from the database into the map
             map.put(tmpKey, tmpValue);
-
 
             cursor.moveToNext();
         }

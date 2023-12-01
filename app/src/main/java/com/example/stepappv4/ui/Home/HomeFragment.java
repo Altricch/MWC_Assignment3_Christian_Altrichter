@@ -51,6 +51,7 @@ public class HomeFragment extends Fragment {
 
 
 
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         HomeViewModel homeViewModel =
@@ -93,6 +94,16 @@ public class HomeFragment extends Fragment {
                         Toast.makeText(getContext(), R.string.acc_sensor_not_available, Toast.LENGTH_LONG).show();
                     }
 
+                    if (stepDetectorSensor != null)
+                    {
+                        sensorListener = new StepCounterListener(stepCountsView, progressBar, database);
+                        sensorManager.registerListener(sensorListener, stepDetectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                        Toast.makeText(getContext(), R.string.start_text, Toast.LENGTH_LONG).show(); }
+                    else
+                    {
+                        Toast.makeText(getContext(), R.string.step_detector_sensor_not_available, Toast.LENGTH_LONG).show();
+                    }
+
                 }
                 else
                 {
@@ -131,6 +142,8 @@ class  StepCounterListener implements SensorEventListener{
     private String day;
     private String hour;
 
+    //TODO 18.1: Declare a counter for STEP_DETECTOR
+     public static int stepDetectorCounter = 0;
 
     public StepCounterListener(TextView stepCountsView, CircularProgressIndicator progressBar,  SQLiteDatabase databse)
     {
@@ -159,9 +172,6 @@ class  StepCounterListener implements SensorEventListener{
                 jdf.setTimeZone(TimeZone.getTimeZone("GMT+2"));
                 String sensorEventDate = jdf.format(timeInMillis);
 
-
-
-
                 if ((currentTimeInMilliSecond - lastSensorUpdate) > 1000)
                 {
                     lastSensorUpdate = currentTimeInMilliSecond;
@@ -169,10 +179,7 @@ class  StepCounterListener implements SensorEventListener{
                     Log.d("Acc. Event", "last sensor update at " + String.valueOf(sensorEventDate) + sensorRawValues);
                 }
 
-
                 accMag = Math.sqrt(x*x+y*y+z*z);
-
-
                 accSeries.add((int) accMag);
 
                 // Get the date, the day and the hour
@@ -186,12 +193,20 @@ class  StepCounterListener implements SensorEventListener{
                 timestampsSeries.add(timestamp);
                 peakDetection();
 
+            case Sensor.TYPE_STEP_DETECTOR:
+                  countSteps(sensorEvent.values[0]);
+
                 break;
 
         }
-
-
     }
+
+    private void countSteps(float step)
+    {
+        stepDetectorCounter += step;
+        Log.d("STEP_DETECTOR STEPS: ", String.valueOf(stepDetectorCounter));
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
@@ -219,6 +234,7 @@ class  StepCounterListener implements SensorEventListener{
                 accStepCounter += 1;
                 Log.d("ACC STEPS: ", String.valueOf(accStepCounter));
                 stepCountsView.setText(String.valueOf(accStepCounter));
+
                 progressBar.setProgress(accStepCounter);
 
                 ContentValues databaseEntry = new ContentValues();
